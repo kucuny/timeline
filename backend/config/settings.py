@@ -4,7 +4,8 @@ import environ
 
 
 # Read from .env
-environ.Env.read_env()
+env = environ.Env()
+env.read_env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -13,11 +14,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '+jes^hp8+mjk%@r5q7s*5!(-(+2&wz8!qk^h#-7l9zuv9r83na'
+SECRET_KEY = env.str('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = []
+DEBUG = env.bool('DJANGO_DEBUG', default=True)
+
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[])
 
 # Application definition
 DJANGO_APPS = [
@@ -76,29 +78,69 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': env.db('DJANGO_DEFAULT_DB')
 }
 
 # Authentication
 AUTH_USER_MODEL = 'users.User'
+AUTH_USERNAME_DELEGATOR_FIELD = 'email'
+LOGIN_REDIRECT_URL = '/'
+
+# Social auth configurations
+SOCIAL_AUTH_AUTHENTICATION_BACKENDS = []
+
+SOCIAL_AUTH_ENABLED_FEATURES = env.list('SOCIAL_AUTH_ENABLED_FEATURES')
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'users.social_auth.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+)
+
+if 'facebook' in SOCIAL_AUTH_ENABLED_FEATURES:
+    SOCIAL_AUTH_AUTHENTICATION_BACKENDS.append('social_core.backends.facebook.FacebookOAuth2')
+    SOCIAL_AUTH_FACEBOOK_KEY = env.str('SOCIAL_AUTH_FACEBOOK_KEY')
+    SOCIAL_AUTH_FACEBOOK_SECRET = env.str('SOCIAL_AUTH_FACEBOOK_SECRET')
+    SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+    SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+        'locale': 'en_US',
+        'fields': 'id, name, email',
+    }
+
+if 'google' in SOCIAL_AUTH_ENABLED_FEATURES:
+    SOCIAL_AUTH_AUTHENTICATION_BACKENDS.append('social_core.backends.google.GoogleOAuth2')
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env.str('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env.str('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
+    SOCIAL_AUTH_GOOGLE_OAUTH2_USE_UNIQUE_USER_ID = True
+    SOCIAL_AUTH_GOOGLE_OAUTH2_USERNAME_IS_FULL_EMAIL = True
+
+if 'github' in SOCIAL_AUTH_ENABLED_FEATURES:
+    SOCIAL_AUTH_AUTHENTICATION_BACKENDS.append('social_core.backends.github.GithubOAuth2')
+    SOCIAL_AUTH_GITHUB_KEY = env.str('SOCIAL_AUTH_GITHUB_KEY')
+    SOCIAL_AUTH_GITHUB_SECRET = env.str('SOCIAL_AUTH_GITHUB_SECRET')
+
+if 'naver' in SOCIAL_AUTH_ENABLED_FEATURES:
+    SOCIAL_AUTH_AUTHENTICATION_BACKENDS.append('social_core.backends.naver.NaverOAuth2')
+    SOCIAL_AUTH_NAVER_KEY = env.str('SOCIAL_AUTH_NAVER_KEY')
+    SOCIAL_AUTH_NAVER_SECRET = env.str('SOCIAL_AUTH_NAVER_SECRET')
+
+if 'kakao' in SOCIAL_AUTH_ENABLED_FEATURES:
+    SOCIAL_AUTH_AUTHENTICATION_BACKENDS.append('social_core.backends.kakao.KakaoOAuth2')
+    SOCIAL_AUTH_KAKAO_KEY = env.str('SOCIAL_AUTH_KAKAO_KEY')
+    SOCIAL_AUTH_KAKAO_SECRET = env.str('SOCIAL_AUTH_KAKAO_SECRET')
+
 
 # Authentication Backend
-AUTHENTICATION_BACKENDS = [
-    'social_core.backends.facebook.FacebookOAuth2',
-    'social_core.backends.github.GithubMemberOAuth2',
-    'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.instagram.InstagramOAuth2',
-    'social_core.backends.kakao.KakaoOAuth2',
-    'social_core.backends.linkedin.LinkedinOAuth2',
-    'social_core.backends.naver.NaverOAuth2',
-    'social_core.backends.telegram.TelegramAuth',
-    'social_core.backends.twitter.TwitterOAuth',
-
+DEFAULT_AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+AUTHENTICATION_BACKENDS = SOCIAL_AUTH_AUTHENTICATION_BACKENDS + DEFAULT_AUTHENTICATION_BACKENDS
+
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
