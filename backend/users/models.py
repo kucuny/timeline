@@ -5,7 +5,7 @@ from helpers.models import BaseDateTimeModel
 
 
 class User(AbstractUser):
-    pass
+    is_family = models.BooleanField(default=False)
 
 
 class Profile(BaseDateTimeModel):

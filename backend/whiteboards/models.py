@@ -11,6 +11,8 @@ User = get_user_model()
 class WhiteBoard(BaseDateTimeModel):
     content = models.TextField()
 
+    images = models.ManyToManyField(Image,
+                                    related_name='whiteboards')
     tags = models.ManyToManyField(Tag,
                                   related_name='whiteboards')
 
