@@ -81,6 +81,13 @@ DATABASES = {
     'default': env.db('DJANGO_DEFAULT_DB')
 }
 
+# Caches
+CACHES = {
+    'default': env.cache('CACHE_DEFAULT', default='locmemcache://default'),
+    'session': env.cache('CACHE_SESSION', default='locmemcache://session'),
+    'auth': env.cache('CACHE_AUTH', default='locmemcache://auth'),
+}
+
 # Authentication
 AUTH_USER_MODEL = 'users.User'
 AUTH_USERNAME_DELEGATOR_FIELD = 'email'
