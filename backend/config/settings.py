@@ -83,9 +83,9 @@ DATABASES = {
 
 # Caches
 CACHES = {
-    'default': env.cache('CACHE_DEFAULT', default='locmemcache://default'),
-    'session': env.cache('CACHE_SESSION', default='locmemcache://session'),
-    'auth': env.cache('CACHE_AUTH', default='locmemcache://auth'),
+    'default': env.cache('DJANGO_CACHE_DEFAULT'),
+    'session': env.cache('DJANGO_CACHE_SESSION'),
+    'auth': env.cache('DJANGO_CACHE_AUTH'),
 }
 
 # Authentication
