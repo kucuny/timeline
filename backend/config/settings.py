@@ -208,3 +208,11 @@ CONSTANCE_CONFIG = {
         '', 'Google photo token'
     ),
 }
+
+# Google API
+GOOGLE_OAUTH2_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
+
+# Google API Permission (Scopt)
+GOOGLE_PHOTO_PERMISSION_SCOPES = (
+    'https://www.googleapis.com/auth/photoslibrary.readonly',
+)
