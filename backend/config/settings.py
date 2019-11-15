@@ -30,6 +30,8 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 THIRD_PARTY_APPS = [
+    'constance',
+    'constance.backends.database',
     'django_extensions',
     'rest_framework',
     'social_django',
@@ -150,7 +152,6 @@ if 'twitter' in SOCIAL_AUTH_ENABLED_FEATURES:
     SOCIAL_AUTH_TWITTER_KEY = env.str('SOCIAL_AUTH_TWITTER_KEY')
     SOCIAL_AUTH_TWITTER_SECRET = env.str('SOCIAL_AUTH_TWITTER_SECRET')
 
-
 # Authentication Backend
 DEFAULT_AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -198,3 +199,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 STATIC_URL = '/static/'
+
+# Django Constance
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+CONSTANCE_DATABASE_PREFIX = 'constance:timeline:'
+CONSTANCE_CONFIG = {
+    'GOOGLE_PHOTO_API_TOKEN': (
+        '', 'Google photo token'
+    ),
+}
