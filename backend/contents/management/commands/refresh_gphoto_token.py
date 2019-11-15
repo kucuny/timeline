@@ -18,22 +18,32 @@ class Command(BaseCommand):
         )
 
     def save_token(self, token):
-        setattr(config, 'GOOGLE_PHOTO_API_TOKEN', token)
+        setattr(config, 'GOOGLE_PHOTO_API_TOKEN', json.dumps(token))
 
     def handle(self, *args, **options):
         secret_file = options['secret_file']
         if not secret_file or not os.path.exists(secret_file):
-            raise CommandError('Secret file does not exist.')
+            try:
+                secret_data = json.loads(config.GOOGLE_OAOTH2_API_SECRET)['installed']
+                if not secret_data:
+                    raise CommandError('Secret file does not exist.')
+            except (json.decoder.JSONDecodeError, TypeError):
+                raise CommandError('Invalid saved google api secret.')
 
-        with open(secret_file, 'r') as f:
-            secret_data = json.load(f)['installed']
+        if secret_file:
+            with open(secret_file, 'r') as f:
+                secret_data = json.load(f)['installed']
 
         client_id = secret_data['client_id']
         client_secret = secret_data['client_secret']
         redirect_uri = secret_data['redirect_uris'][0]
         token_uri = secret_data['token_uri']
 
-        saved_token = config.GOOGLE_PHOTO_API_TOKEN
+        try:
+            saved_token = json.loads(config.GOOGLE_PHOTO_API_TOKEN)
+        except (json.decoder.JSONDecodeError, TypeError):
+            saved_token = None
+
         if saved_token:
             oauth2_request_params = {
                 'client_id': client_id,

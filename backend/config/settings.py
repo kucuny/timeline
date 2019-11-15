@@ -204,8 +204,13 @@ STATIC_URL = '/static/'
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 CONSTANCE_DATABASE_PREFIX = 'constance:timeline:'
 CONSTANCE_CONFIG = {
+    'GOOGLE_OAOTH2_API_SECRET': (
+        '',
+        'Google oauth2 api secret',
+    ),
     'GOOGLE_PHOTO_API_TOKEN': (
-        '', 'Google photo token'
+        '',
+        'Google photo token',
     ),
 }
 
