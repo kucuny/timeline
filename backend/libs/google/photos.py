@@ -1,7 +1,9 @@
+from datetime import date
 from urllib.parse import urljoin
 
 from django.core.exceptions import ValidationError
 
+from libs.google.consts import GooglePhotosFeatureType, GooglePhotosMediaType
 from libs.google.oauth2 import GoogleClient
 
 
@@ -77,14 +79,55 @@ class GooglePhotoV1Client:
 
         return media_items
 
-    def search_media_items_by_album_id(self, album_id):
+    def search_media_items_by_date(self, date_: date):
+        filters = {
+            'dateFilter':  {
+                'dates': {
+                    'year': date_.year,
+                    'month': date_.month,
+                    'day': date_.day,
+                },
+            },
+        }
+        return self._search_media_items(filters=filters)
+
+    def search_media_items_by_date_range(self, start_date: date, end_date: date):
+        filters = {
+            'dateFilter': {
+                'ranges': {
+                    'startDate': {
+                        'year': start_date.year,
+                        'month': start_date.month,
+                        'day': start_date.day,
+                    },
+                    'endDate': {
+                        'year': end_date.year,
+                        'month': end_date.month,
+                        'day': end_date.day,
+                    },
+                },
+            },
+        }
+        return self._search_media_items(filters=filters)
+
+    def search_media_items_by_album_id(self, album_id: str):
         return self._search_media_items(album_id=album_id)
 
     def search_favorite_media_items(self):
         filters = {
             'featureFilter': {
                 'includedFeatures': [
-                    'FAVORITES',
+                    GooglePhotosFeatureType.FAVORITES.value,
+                ],
+            },
+        }
+        return self._search_media_items(filters=filters)
+
+    def search_mediatype_media_items(self, media_type: GooglePhotosMediaType):
+        filters = {
+            'mediaTypeFilter': {
+                'mediaTypes': [
+                    media_type.value,
                 ],
             },
         }
