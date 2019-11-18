@@ -26,12 +26,12 @@ DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
 THIRD_PARTY_APPS = [
     'constance',
-    'constance.backends.database',
     'django_extensions',
     'rest_framework',
     'social_django',
@@ -201,8 +201,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Django Constance
-CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
-CONSTANCE_DATABASE_PREFIX = 'constance:timeline:'
+CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
+CONSTANCE_REDIS_CONNECTION = env('DJANGO_CONSTANCE_CACHE')
+CONSTANCE_REDIS_PREFIX = 'constance:timeline:'
 CONSTANCE_CONFIG = {
     'GOOGLE_OAOTH2_API_SECRET': (
         '',

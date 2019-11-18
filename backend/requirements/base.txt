@@ -3,8 +3,10 @@ django-constance==2.4.0
 django-environ==0.4.5
 django-extensions==2.2.5
 django-picklefield==2.0
+django-redis==4.10.0
 djangorestframework==3.10.3
 ipython==7.9.0
 Pillow==6.2.1
+psycopg2-binary==2.8.4
 requests==2.22.0
 social-auth-app-django==3.1.0

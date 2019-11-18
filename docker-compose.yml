@@ -1,0 +1,46 @@
+version: '3.7'
+
+volumes:
+  database_data: {}
+  cache_data: {}
+
+services:
+  database:
+    image: postgres:12-alpine
+    restart: always
+    logging:
+      driver: none
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+    env_file:
+      - backend/misc/docker/.database.env
+    ports:
+      - 25432:5432
+
+  cache:
+    image: redis:5-alpine
+    restart: always
+    logging:
+      driver: none
+    volumes:
+      - cache_data:/data:rw
+    ports:
+      - 26379:6379
+
+  backend:
+    restart: always
+    env_file:
+      - backend/config/.env
+    build:
+      context: .
+      dockerfile: ./backend/misc/docker/Dockerfile
+    command: python /usr/src/web/app/manage.py runserver 0:8000
+    depends_on:
+      - database
+      - cache
+    volumes:
+      - ./backend:/usr/src/web/app
+    ports:
+      - 8082:8000
+    networks:
+      - default
