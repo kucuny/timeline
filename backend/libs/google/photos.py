@@ -11,11 +11,12 @@ MAX_PAGE_SIZE = 50
 GOOGLE_PHOTOS_API_V1_BASE_URL = 'https://photoslibrary.googleapis.com/v1/'
 
 
+# TODO: Refactoring
 class GooglePhotoV1Client:
     def __init__(self, google_client: GoogleClient):
         self.google_client = google_client
 
-    def album_list(self):
+    def albums(self):
         endpoint = urljoin(GOOGLE_PHOTOS_API_V1_BASE_URL, 'albums')
 
         params = {
@@ -45,6 +46,47 @@ class GooglePhotoV1Client:
         response = self.google_client.session.get(endpoint)
         result = response.json()
         return result
+
+    def media_items(self):
+        endpoint = urljoin(GOOGLE_PHOTOS_API_V1_BASE_URL, 'mediaItems')
+
+        params = {
+            'pageSize': MAX_PAGE_SIZE,
+        }
+        media_items = []
+        next_page_token = None
+        while True:
+            if next_page_token:
+                params['pageToken'] = next_page_token
+
+            response = self.google_client.session.get(endpoint, params=params)
+            result = response.json()
+            if not result:
+                break
+
+            media_items.extend(result['mediaItems'])
+            next_page_token = result.get('nextPageToken')
+
+            if not next_page_token:
+                break
+
+        return media_items
+
+    def media_item(self, media_item_id: str):
+        endpoint = urljoin(GOOGLE_PHOTOS_API_V1_BASE_URL, f'mediaItems/{media_item_id}')
+        response = self.google_client.session.get(endpoint)
+        result = response.json()
+        return result
+
+    def batch_get_media_items(self, media_item_ids: list):
+        endpoint = urljoin(GOOGLE_PHOTOS_API_V1_BASE_URL, f'/v1/mediaItems:batchGet')
+
+        params = {
+            'mediaItemIds': media_item_ids,
+        }
+        response = self.google_client.session.get(endpoint, params=params)
+        result = response.json()['mediaItemResults']
+        return [item['mediaItem'] for item in result]
 
     def _search_media_items(self, album_id: str = None, filters: dict = None):
         endpoint = urljoin(GOOGLE_PHOTOS_API_V1_BASE_URL, '/v1/mediaItems:search')
