@@ -73,8 +73,9 @@ class GoogleClient:
         self.session = OAuth2Session(**oauth2_request_params)
 
         if not self.token:
-            user_authorization_url = self.session.authorization_url(self.auth_url)
-            webbrowser.open(user_authorization_url[0])
+            user_authorization_url = self.session.authorization_url(self.auth_url)[0]
+            print(user_authorization_url)
+            webbrowser.open(user_authorization_url)
             auth_code = input('Input generated auth code : ')
             token = self.session.fetch_token(token_uri, client_secret=client_secret, code=auth_code)
             self.update_token(token)

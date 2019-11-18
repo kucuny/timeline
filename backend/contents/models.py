@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.text import slugify
 
@@ -83,3 +84,31 @@ class PostComment(BaseDateTimeModel):
         self.is_deleted = True
         self.save(update_fields=['is_deleted'])
         super().delete(using, keep_parents)
+
+
+class GooglePhotoAlbum(BaseDateTimeModel):
+    id = models.CharField(primary_key=True, max_length=250)
+    title = models.CharField(max_length=200, null=False, blank=False)
+    product_url = models.URLField(max_length=2000, null=False, blank=False)
+    cover_photo_url = models.URLField(max_length=2000)
+
+
+class GooglePhotoItem(BaseDateTimeModel):
+    id = models.CharField(primary_key=True, max_length=250)
+    album = models.ForeignKey(GooglePhotoAlbum,
+                              null=True, blank=True,
+                              on_delete=models.SET_NULL,
+                              related_name='google_photo_items')
+    product_url = models.URLField(max_length=2000)
+    base_url = models.URLField(max_length=2000)
+    mine_type = models.CharField(max_length=100)
+    media_type = models.CharField(max_length=20)
+    default_weight = models.PositiveIntegerField()
+    default_height = models.PositiveIntegerField()
+    meta = JSONField(null=True, blank=True)
+
+    imported = models.BooleanField(default=False)
+    imported_at = models.DateTimeField()
+
+    def get_photo_url(self, weight: int, height: int):
+        return self.base_url + f'=w{weight}-h{height}'

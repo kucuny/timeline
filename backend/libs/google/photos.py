@@ -32,7 +32,7 @@ class GooglePhotoV1Client:
             if not result:
                 break
 
-            albums.append(result['albums'])
+            albums.extend(result['albums'])
             next_page_token = result.get('nextPageToken')
 
             if not next_page_token:
@@ -71,7 +71,7 @@ class GooglePhotoV1Client:
             if not result:
                 break
 
-            media_items.append(result['mediaItems'])
+            media_items.extend(result['mediaItems'])
             next_page_token = result.get('nextPageToken')
 
             if not next_page_token:
