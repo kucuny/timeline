@@ -103,12 +103,12 @@ class GooglePhotoItem(BaseDateTimeModel):
     base_url = models.URLField(max_length=2000)
     mine_type = models.CharField(max_length=100)
     media_type = models.CharField(max_length=20)
-    default_weight = models.PositiveIntegerField()
-    default_height = models.PositiveIntegerField()
-    meta = JSONField(null=True, blank=True)
+    weight = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
+    meta = JSONField()
 
-    imported = models.BooleanField(default=False)
-    imported_at = models.DateTimeField()
+    imported_at = models.DateTimeField(null=True, blank=True)
+    migrated_at = models.DateTimeField(null=True, blank=True)
 
     def get_photo_url(self, weight: int, height: int):
         return self.base_url + f'=w{weight}-h{height}'

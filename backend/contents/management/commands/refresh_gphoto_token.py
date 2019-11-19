@@ -1,6 +1,4 @@
-import json
-
-from django.core.management import BaseCommand, CommandError
+from django.core.management import BaseCommand
 
 from libs.google.oauth2 import GoogleClient
 
