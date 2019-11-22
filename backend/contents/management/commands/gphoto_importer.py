@@ -156,7 +156,6 @@ class Command(BaseCommand):
         photos = GooglePhotoItem.objects.filter(album_id=target_album_id, is_public=True).values_list('pk', flat=True)
         paging = Paginator(photos, 50)
         for page in range(paging.num_pages):
-            import pdb; pdb.set_trace()
             photo_ids = list(paging.page(page + 1))
             photos_from_gphotos = self.gp_client.batch_get_media_items(photo_ids)
 
