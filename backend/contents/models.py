@@ -91,6 +91,7 @@ class GooglePhotoAlbum(BaseDateTimeModel):
     title = models.CharField(max_length=200, null=False, blank=False)
     product_url = models.URLField(max_length=2000, null=False, blank=False)
     cover_photo_url = models.URLField(max_length=2000)
+    is_public = models.BooleanField(default=False)
 
 
 class GooglePhotoItem(BaseDateTimeModel):
@@ -106,6 +107,9 @@ class GooglePhotoItem(BaseDateTimeModel):
     weight = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
     meta = JSONField()
+    is_public = models.BooleanField(default=False)
+    shooting_at = models.DateTimeField(null=False, blank=False)
+    shooting_date = models.DateField(null=False, blank=False, db_index=True)
 
     imported_at = models.DateTimeField(null=True, blank=True)
     migrated_at = models.DateTimeField(null=True, blank=True)
