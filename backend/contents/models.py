@@ -113,6 +113,3 @@ class GooglePhotoItem(BaseDateTimeModel):
 
     imported_at = models.DateTimeField(null=True, blank=True)
     migrated_at = models.DateTimeField(null=True, blank=True)
-
-    def get_photo_url(self, weight: int, height: int):
-        return self.base_url + f'=w{weight}-h{height}'

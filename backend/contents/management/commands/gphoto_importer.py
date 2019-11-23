@@ -16,6 +16,7 @@ from libs.google.photos import GooglePhotoV1Client
 
 
 DEFAULT_SAVED_PHOTOS_PATH = '/tmp/migrated'
+MAX_ITEMS = 50
 
 
 class Command(BaseCommand):
@@ -128,40 +129,33 @@ class Command(BaseCommand):
             }
             if target_album_id:
                 params['album_id'] = target_album_id
-            GooglePhotoItem.objects.update_or_create(id=photo['id'],
-                                                     defaults=params)
+            GooglePhotoItem.objects.update_or_create(id=photo['id'], defaults=params)
 
-    def migrate_photos_from_item_ids(self, path, target_item_ids=None):
+    def migrate_items(self, path, album_id=None, item_ids=None):
         path = path if path else DEFAULT_SAVED_PHOTOS_PATH
-        item_ids = target_item_ids.split(',')
-        imported_photos = GooglePhotoItem.objects.filter(id__in=item_ids, is_public=True).only('product_url')
-        photos = self.gp_client.batch_get_media_items(list(imported_photos.values_list('id', flat=True)))
+        filters = {
+            'is_public': True,
+            'migrated_at__isnull': True,
+        }
+        if album_id:
+            filters['album_id'] = album_id
+        else:
+            item_ids = item_ids.split(',')
+            filters['pk__in'] = item_ids
 
-        for photo in photos:
-            photo_meta = photo['mediaMetadata']
-            url = photo['baseUrl'] + f'=w{photo_meta["width"]}-h{photo_meta["height"]}'
-            response = requests.get(url, stream=True)
-            if response.ok:
-                shooting_at = parse(photo_meta['creationTime'])
-                filename = f'{shooting_at.strftime("%Y%m%d")}_{shooting_at.strftime("%H%M%S")}_{photo["filename"]}'
-                try:
-                    with open(f'{path}/{filename}', 'wb') as f:
-                        f.write(response.content)
-                    GooglePhotoItem.objects.filter(pk=photo['id']).update(migrated_at=timezone.now())
-                except IOError:
-                    pass
-
-    def migrate_photos_from_album_id(self, path, target_album_id=None):
-        path = path if path else DEFAULT_SAVED_PHOTOS_PATH
-        photos = GooglePhotoItem.objects.filter(album_id=target_album_id, is_public=True).values_list('pk', flat=True)
-        paging = Paginator(photos, 50)
-        for page in range(paging.num_pages):
+        photos = GooglePhotoItem.objects.filter(**filters).values_list('pk', flat=True).order_by('shooting_at')
+        paging = Paginator(photos, MAX_ITEMS)
+        for page in tqdm(range(paging.num_pages), desc='Pages'):
             photo_ids = list(paging.page(page + 1))
             photos_from_gphotos = self.gp_client.batch_get_media_items(photo_ids)
 
-            for photo in photos_from_gphotos:
+            for photo in tqdm(photos_from_gphotos, desc=f'{page + 1} Page of {paging.num_pages}'):
                 photo_meta = photo['mediaMetadata']
-                url = photo['baseUrl'] + f'=w{photo_meta["width"]}-h{photo_meta["height"]}'
+                url = (
+                    photo['baseUrl'] + '=dv'
+                    if photo['mimeType'].startswith('video')
+                    else photo['baseUrl'] + f'=w{photo_meta["width"]}-h{photo_meta["height"]}'
+                )
                 response = requests.get(url, stream=True)
                 if response.ok:
                     shooting_at = parse(photo_meta['creationTime'])
@@ -218,8 +212,7 @@ class Command(BaseCommand):
             if not target_item_ids and not target_album_id:
                 raise CommandError('You must set --target-item-ids or --target-album-id')
 
-            # TODO: mov 인 경우 chuck 처리
             if target_item_ids:
-                self.migrate_photos_from_item_ids(path=target_path, target_item_ids=target_item_ids)
+                self.migrate_items(path=target_path, item_ids=target_item_ids)
             if target_album_id:
-                self.migrate_photos_from_album_id(path=target_path, target_album_id=target_album_id)
+                self.migrate_items(path=target_path, album_id=target_album_id)
