@@ -37,6 +37,11 @@ class Command(BaseCommand):
             action='store_true',
         )
         parser.add_argument(
+            '--sync-favorite-photos',
+            dest='sync_favorite_photos',
+            action='store_true',
+        )
+        parser.add_argument(
             '--migrate-photos',
             dest='migrate_photos',
             action='store_true',
@@ -85,7 +90,7 @@ class Command(BaseCommand):
         self.gp_client = GooglePhotoV1Client(google_client)
 
     def show_albums(self):
-        albums = list(GooglePhotoAlbum.objects.all().values('id', 'title', 'is_public'))
+        albums = list(GooglePhotoAlbum.objects.all().values('id', 'title', 'total_count', 'is_public'))
         pprint(albums)
 
     def sync_albums(self):
@@ -93,6 +98,7 @@ class Command(BaseCommand):
         for album in tqdm(albums):
             params = {
                 'title': album['title'],
+                'total_count': album['mediaItemsCount'],
                 'product_url': album['productUrl'],
                 'cover_photo_url': album['coverPhotoBaseUrl'],
             }
@@ -102,7 +108,7 @@ class Command(BaseCommand):
     def sync_photos(self, target_album_id=None, target_date=None, target_start_date=None, target_end_date=None):
         if target_album_id:
             album = GooglePhotoAlbum.objects.get(pk=target_album_id)
-            print(album.title)
+            print(f'Album title : {album.title}')
             photos = self.gp_client.search_media_items_by_album_id(target_album_id)
         elif target_date:
             photos = self.gp_client.search_media_items_by_date(target_date)
@@ -152,9 +158,9 @@ class Command(BaseCommand):
             for photo in tqdm(photos_from_gphotos, desc=f'{page + 1} Page of {paging.num_pages}'):
                 photo_meta = photo['mediaMetadata']
                 url = (
-                    photo['baseUrl'] + '=dv'
+                    photo['baseUrl'] + '=dv-d'
                     if photo['mimeType'].startswith('video')
-                    else photo['baseUrl'] + f'=w{photo_meta["width"]}-h{photo_meta["height"]}'
+                    else photo['baseUrl'] + f'=w{photo_meta["width"]}-h{photo_meta["height"]}-d'
                 )
                 response = requests.get(url, stream=True)
                 if response.ok:
@@ -177,6 +183,8 @@ class Command(BaseCommand):
         target_start_date = options['target_start_date']
         target_end_date = options['target_end_date']
 
+        sync_favorite_photos = options['sync_favorite_photos']
+
         migrate_photos = options['migrate_photos']
         target_path = options['target_path']
         target_item_ids = options['target_item_ids']
@@ -185,7 +193,7 @@ class Command(BaseCommand):
             self.show_albums()
             return
 
-        if sync_albums or sync_photos or migrate_photos:
+        if sync_albums or sync_photos or sync_favorite_photos or migrate_photos:
             self.initialize()
         else:
             raise CommandError('You must set --sync-albums or --sync-photos.')
@@ -208,6 +216,10 @@ class Command(BaseCommand):
                 except ValueError:
                     raise CommandError('You must set valid target target_date(--target_date %Y-%m-%d).')
                 self.sync_photos(target_start_date=target_start_date, target_end_date=target_end_date)
+        elif sync_favorite_photos:
+            photos = self.gp_client.search_favorite_media_items()
+            ids = {photo['id'] for photo in photos}
+            GooglePhotoItem.objects.filter(pk__in=ids).update(favorite=True)
         elif migrate_photos:
             if not target_item_ids and not target_album_id:
                 raise CommandError('You must set --target-item-ids or --target-album-id')

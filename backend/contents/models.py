@@ -89,6 +89,7 @@ class PostComment(BaseDateTimeModel):
 class GooglePhotoAlbum(BaseDateTimeModel):
     id = models.CharField(primary_key=True, max_length=250)
     title = models.CharField(max_length=200, null=False, blank=False)
+    total_count = models.PositiveIntegerField(default=0)
     product_url = models.URLField(max_length=2000, null=False, blank=False)
     cover_photo_url = models.URLField(max_length=2000)
     is_public = models.BooleanField(default=False)
@@ -106,6 +107,7 @@ class GooglePhotoItem(BaseDateTimeModel):
     media_type = models.CharField(max_length=20)
     weight = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
+    favorite = models.NullBooleanField()
     meta = JSONField()
     is_public = models.BooleanField(default=False)
     shooting_at = models.DateTimeField(null=False, blank=False)
