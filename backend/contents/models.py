@@ -87,7 +87,8 @@ class PostComment(BaseDateTimeModel):
 
 
 class GooglePhotoAlbum(BaseDateTimeModel):
-    id = models.CharField(primary_key=True, max_length=250)
+    id = models.BigAutoField(primary_key=True)
+    album_id = models.CharField(max_length=250, unique=True)
     title = models.CharField(max_length=200, null=False, blank=False)
     total_count = models.PositiveIntegerField(default=0)
     product_url = models.URLField(max_length=2000, null=False, blank=False)
@@ -96,11 +97,8 @@ class GooglePhotoAlbum(BaseDateTimeModel):
 
 
 class GooglePhotoItem(BaseDateTimeModel):
-    id = models.CharField(primary_key=True, max_length=250)
-    album = models.ForeignKey(GooglePhotoAlbum,
-                              null=True, blank=True,
-                              on_delete=models.SET_NULL,
-                              related_name='google_photo_items')
+    id = models.BigAutoField(primary_key=True)
+    item_id = models.CharField(max_length=250, unique=True)
     product_url = models.URLField(max_length=2000)
     base_url = models.URLField(max_length=2000)
     mine_type = models.CharField(max_length=100)
@@ -115,3 +113,5 @@ class GooglePhotoItem(BaseDateTimeModel):
 
     imported_at = models.DateTimeField(null=True, blank=True)
     migrated_at = models.DateTimeField(null=True, blank=True)
+
+    albums = models.ManyToManyField(GooglePhotoAlbum, related_name='photo_items')

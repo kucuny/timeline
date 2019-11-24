@@ -1,4 +1,3 @@
-import shutil
 from datetime import datetime
 from pprint import pprint
 
@@ -90,7 +89,7 @@ class Command(BaseCommand):
         self.gp_client = GooglePhotoV1Client(google_client)
 
     def show_albums(self):
-        albums = list(GooglePhotoAlbum.objects.all().values('id', 'title', 'total_count', 'is_public'))
+        albums = list(GooglePhotoAlbum.objects.all().values('id', 'album_id', 'title', 'total_count', 'is_public'))
         pprint(albums)
 
     def sync_albums(self):
@@ -98,16 +97,16 @@ class Command(BaseCommand):
         for album in tqdm(albums):
             params = {
                 'title': album['title'],
-                'total_count': album['mediaItemsCount'],
+                'total_count': album.get('mediaItemsCount', 0),
                 'product_url': album['productUrl'],
                 'cover_photo_url': album['coverPhotoBaseUrl'],
             }
-            GooglePhotoAlbum.objects.update_or_create(id=album['id'],
+            GooglePhotoAlbum.objects.update_or_create(album_id=album['id'],
                                                       defaults=params)
 
     def sync_photos(self, target_album_id=None, target_date=None, target_start_date=None, target_end_date=None):
         if target_album_id:
-            album = GooglePhotoAlbum.objects.get(pk=target_album_id)
+            album = GooglePhotoAlbum.objects.get(album_id=target_album_id)
             print(f'Album title : {album.title}')
             photos = self.gp_client.search_media_items_by_album_id(target_album_id)
         elif target_date:
@@ -116,6 +115,7 @@ class Command(BaseCommand):
             photos = self.gp_client.search_media_items_by_date_range(target_start_date, target_end_date)
 
         imported_at = timezone.now()
+        synced_photo = []
         for photo in tqdm(photos):
             photo_meta = photo['mediaMetadata']
             shooing_at = parse(photo_meta['creationTime'])
@@ -133,9 +133,11 @@ class Command(BaseCommand):
                 'shooting_at': shooing_at,
                 'shooting_date': shooing_at,
             }
-            if target_album_id:
-                params['album_id'] = target_album_id
-            GooglePhotoItem.objects.update_or_create(id=photo['id'], defaults=params)
+            item, _ = GooglePhotoItem.objects.update_or_create(item_id=photo['id'], defaults=params)
+            synced_photo.append(item)
+
+        if target_album_id:
+            album.photo_items.add(*synced_photo)
 
     def migrate_items(self, path, album_id=None, item_ids=None):
         path = path if path else DEFAULT_SAVED_PHOTOS_PATH
@@ -144,18 +146,23 @@ class Command(BaseCommand):
             'migrated_at__isnull': True,
         }
         if album_id:
-            filters['album_id'] = album_id
+            filters['albums__album_id'] = album_id
         else:
             item_ids = item_ids.split(',')
-            filters['pk__in'] = item_ids
+            filters['item_id__in'] = item_ids
 
-        photos = GooglePhotoItem.objects.filter(**filters).values_list('pk', flat=True).order_by('shooting_at')
+        photos = GooglePhotoItem.objects.filter(**filters).order_by('shooting_at')
+        if not photos.exists():
+            return
+
+        update_migrated_at_item_ids = []
+        except_item_ids = []
         paging = Paginator(photos, MAX_ITEMS)
-        for page in tqdm(range(paging.num_pages), desc='Pages'):
-            photo_ids = list(paging.page(page + 1))
+        for page in tqdm(paging.page_range, desc='Pages'):
+            photo_ids = list(paging.page(page).object_list.values_list('item_id', flat=True))
             photos_from_gphotos = self.gp_client.batch_get_media_items(photo_ids)
 
-            for photo in tqdm(photos_from_gphotos, desc=f'{page + 1} Page of {paging.num_pages}'):
+            for photo in tqdm(photos_from_gphotos, desc=f'{page} Page of {paging.num_pages}'):
                 photo_meta = photo['mediaMetadata']
                 url = (
                     photo['baseUrl'] + '=dv-d'
@@ -169,9 +176,12 @@ class Command(BaseCommand):
                     try:
                         with open(f'{path}/{filename}', 'wb') as f:
                             f.write(response.content)
-                        GooglePhotoItem.objects.filter(pk=photo['id']).update(migrated_at=timezone.now())
-                    except IOError:
-                        pass
+                        update_migrated_at_item_ids.append(photo['id'])
+                    except IOError as e:
+                        except_item_ids.append(photo['id'])
+                        continue
+        GooglePhotoItem.objects.filter(item_id__in=update_migrated_at_item_ids).update(migrated_at=timezone.now())
+        print(except_item_ids)
 
     def handle(self, *args, **options):
         show_albums = options['show_albums']
@@ -219,7 +229,7 @@ class Command(BaseCommand):
         elif sync_favorite_photos:
             photos = self.gp_client.search_favorite_media_items()
             ids = {photo['id'] for photo in photos}
-            GooglePhotoItem.objects.filter(pk__in=ids).update(favorite=True)
+            GooglePhotoItem.objects.filter(item_id__in=ids).update(favorite=True)
         elif migrate_photos:
             if not target_item_ids and not target_album_id:
                 raise CommandError('You must set --target-item-ids or --target-album-id')
