@@ -7,7 +7,6 @@ import environ
 env = environ.Env()
 env.read_env()
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
@@ -199,6 +198,101 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+LOGGING_FORMATTERS = {
+    'verbose': {
+        'format': '{asctime} {levelname} {name}[{process}] {module}:{lineno} {message}',
+        'style': '{',
+        'datefmt': '%Y-%m-%d %H:%M:%S%z',
+    },
+    'query': {
+        'format': '{asctime} {levelname} {name}[{process}] {module}:{lineno} {duration} {sql} args={params}',
+        'style': '{',
+        'datefmt': '%Y-%m-%d %H:%M:%S%z',
+    },
+    'migration': {
+        'format': '{asctime} {levelname} {name}[{process}] {module}:{lineno} {sql} args={params}',
+        'style': '{',
+        'datefmt': '%Y-%m-%d %H:%M:%S%z',
+    },
+}
+LOGGING_FILTERS = {
+    'require_debug_true': {
+        '()': 'django.utils.log.RequireDebugTrue'
+    }
+}
+LOGGING_HANDLERS = {
+    'console': {
+        'level': 'INFO',
+        'class': 'logging.StreamHandler',
+        'formatter': 'verbose',
+    },
+    'debug': {
+        'level': 'DEBUG',
+        'class': 'logging.StreamHandler',
+        'filters': ['require_debug_true'],
+        'formatter': 'verbose',
+    },
+    'console_django_request': {
+        'level': 'INFO',
+        'class': 'logging.StreamHandler',
+        'formatter': 'verbose',
+    },
+    'console_django_server': {
+        'level': 'INFO',
+        'class': 'logging.StreamHandler',
+        'formatter': 'verbose',
+    },
+    'console_django_template': {
+        'level': 'INFO',
+        'class': 'logging.StreamHandler',
+        'formatter': 'verbose',
+    },
+    'console_django_query': {
+        'level': 'DEBUG',
+        'class': 'logging.StreamHandler',
+        'filters': ['require_debug_true'],
+        'formatter': 'query',
+    },
+    'console_django_migration': {
+        'level': 'DEBUG',
+        'class': 'logging.StreamHandler',
+        'filters': ['require_debug_true'],
+        'formatter': 'migration',
+    }
+}
+LOGGING_LOGGERS = {
+    'django': {
+        'handlers': ['console'],
+    },
+    # 'django.request': {
+    #     'handlers': ['console_django_request'],
+    # },
+    # 'django.server': {
+    #     'handlers': ['console_django_server'],
+    # },
+    # 'django.template': {
+    #     'handlers': ['console_django_template'],
+    # },
+    # 'django.db.backends': {
+    #     'handlers': ['console_django_query'],
+    # },
+    # 'django.db.backends.schema': {
+    #     'handlers': ['console_django_migration'],
+    # },
+}
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': LOGGING_FORMATTERS,
+    'filters': LOGGING_FILTERS,
+    'handlers': LOGGING_HANDLERS,
+    'loggers': LOGGING_LOGGERS,
+}
 
 # Django Constance
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'

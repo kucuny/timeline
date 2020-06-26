@@ -3,13 +3,11 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from helpers.models import BaseDateTimeModel
-
 
 User = get_user_model()
 
 
-class Activity(BaseDateTimeModel):
+class Activity(models.Model):
     user = models.ForeignKey(User,
                              null=True, blank=False,
                              db_index=True, on_delete=models.SET_NULL,
@@ -24,6 +22,9 @@ class Activity(BaseDateTimeModel):
 
     activity_created_at = models.DateTimeField(auto_now_add=True,
                                                db_index=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         index_together = ('user', 'content_type', 'object_id')

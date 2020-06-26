@@ -1,0 +1,27 @@
+{
+	debug
+	experimental_http3
+	email kucuny@gmail.com
+	admin off
+}
+
+localhost
+
+handle /favicon.ico {
+	file_server {
+		root staticfiles
+	}
+}
+
+handle /static/* {
+	uri strip_prefix /static
+	file_server {
+		root staticfiles
+	}
+}
+
+reverse_proxy localhost:12095
+
+log {
+	level DEBUG
+}
