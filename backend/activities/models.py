@@ -10,7 +10,7 @@ User = get_user_model()
 class Activity(models.Model):
     user = models.ForeignKey(User,
                              null=True, blank=False,
-                             db_index=True, on_delete=models.SET_NULL,
+                             db_index=True, on_delete=models.CASCADE,
                              related_name='activities')
     content_type = models.ForeignKey(ContentType,
                                      on_delete=models.CASCADE)

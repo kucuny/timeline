@@ -18,7 +18,7 @@ SECRET_KEY = env.str('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['*'])
 
 # Application definition
 DJANGO_APPS = [
@@ -36,12 +36,9 @@ THIRD_PARTY_APPS = [
     'social_django',
 ]
 INTERNAL_APPS = [
-    'activities',
     'api',
-    'books',
     'contents',
     'users',
-    'whiteboards',
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + INTERNAL_APPS
 

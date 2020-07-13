@@ -5,6 +5,13 @@ volumes:
   cache_data: {}
   webserver_data: {}
 
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.0.1/16
+
 services:
   database:
     image: library/postgres:12.3-alpine
@@ -16,6 +23,8 @@ services:
       - ./backend/misc/docker/datastore/.database.env
     ports:
       - 25432:5432
+    networks:
+      - default
 
   cache:
     image: library/redis:6.0.3-alpine
@@ -25,30 +34,32 @@ services:
       - cache_data:/data:rw
     ports:
       - 26379:6379
+    networks:
+      - default
 
-#  backend:
-#    env_file:
-#      - backend/config/.env
-#    build:
-#      context: .
-#      dockerfile: ./backend/misc/docker/backend/Dockerfile
-#    depends_on:
-#      - database
-#      - cache
-#    volumes:
-#      - ./backend:/app
-#    ports:
-#      - 12095:12095
-#    networks:
-#      - default
-#
-#  caddy:
-#    image: library/caddy:2-alpine
-#    depends_on:
-#      - backend
-#    volumes:
-#      - webserver_data:/data:rw
-#      - ./backend/misc/docker/webserver/Caddyfile:/etc/caddy/Caddyfile
-#    ports:
-#      - 0.0.0.0:80:80
-#      - 0.0.0.0:443:443
+  backend:
+    env_file:
+      - backend/config/.env
+    build:
+      context: .
+      dockerfile: ./backend/misc/docker/backend/Dockerfile
+    depends_on:
+      - database
+      - cache
+    volumes:
+      - ./backend:/app
+    ports:
+      - 12095:12095
+    networks:
+      - default
+
+  webserver:
+    image: library/caddy:2-alpine
+    depends_on:
+      - backend
+    volumes:
+      - webserver_data:/data:rw
+      - ./backend/misc/docker/webserver/Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      - 0.0.0.0:80:80
+      - 0.0.0.0:443:443

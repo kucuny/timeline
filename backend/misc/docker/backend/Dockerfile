@@ -8,5 +8,6 @@ RUN apk update \
 
 ENV PYTHONUNBUFFERED 1
 
-#CMD ['uvicorn', 'config.asgi:application', '--port', '12095', '--reload']
-CMD ["python", "/app/manage.py", "runserver", "0:8000"]
+EXPOSE 12095
+
+ENTRYPOINT ["uvicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "12095", "--reload"]

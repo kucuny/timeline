@@ -8,7 +8,6 @@ USER_FIELDS = ['username', 'email']
 
 
 def create_user(strategy, details, backend, user=None, *args, **kwargs):
-    print(strategy, details, backend)
     if user:
         return {'is_new': False}
 
@@ -21,5 +20,5 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
 
     return {
         'is_new': True,
-        'user': strategy.create_user(**fields)
+        'user': strategy.create_user(**fields),
     }

@@ -1,27 +1,16 @@
 {
-	debug
-	experimental_http3
-	email kucuny@gmail.com
-	admin off
+    debug
+    experimental_http3
+    email kucuny@gmail.com
+    admin off
+    acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+    local_certs
 }
 
 localhost
 
-handle /favicon.ico {
-	file_server {
-		root staticfiles
-	}
-}
-
-handle /static/* {
-	uri strip_prefix /static
-	file_server {
-		root staticfiles
-	}
-}
-
-reverse_proxy localhost:12095
+reverse_proxy backend:12095
 
 log {
-	level DEBUG
+    level DEBUG
 }

@@ -16,36 +16,3 @@ class Profile(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
-class FavoritePost(models.Model):
-    user = models.ForeignKey(User,
-                             null=True, blank=True,
-                             db_index=True, on_delete=models.SET_NULL,
-                             related_name='favorite_posts')
-    post = models.ForeignKey('contents.Post',
-                             db_index=True, on_delete=models.CASCADE,
-                             related_name='favorite_post_users')
-    comments = models.TextField()
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('user', 'post')
-
-
-class LikePost(models.Model):
-    user = models.ForeignKey(User,
-                             null=True, blank=True,
-                             db_index=True, on_delete=models.SET_NULL,
-                             related_name='like_posts')
-    post = models.ForeignKey('contents.Post',
-                             db_index=True, on_delete=models.CASCADE,
-                             related_name='like_post_users')
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('user', 'post')
