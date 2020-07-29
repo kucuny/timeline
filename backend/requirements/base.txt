@@ -15,4 +15,4 @@ python-dateutil==2.8.1
 requests==2.24.0
 social-auth-app-django==4.0.0
 tqdm==4.47.0
-uvicorn==0.11.5
+uvicorn==0.11.7
