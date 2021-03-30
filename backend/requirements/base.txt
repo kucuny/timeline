@@ -1,5 +1,5 @@
 boto3==1.14.20
-Django==3.0.8
+Django==3.0.12
 django-constance==2.7.0
 django-environ==0.4.5
 django-extensions==3.0.2
